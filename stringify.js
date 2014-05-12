@@ -5,6 +5,30 @@
  * @returns {String}
  */
 
+function stringify(obj, indent) {
+    indent = indent || 2;
+    var buf = [],
+        spaces = Array(indent + 1).join(' ');
+    if(typeof obj === 'string' || typeof obj === 'number' || typeof obj === 'boolean') {
+        buf.push(spaces, String(obj));
+    } else if(Array.isArray(obj)) {
+        buf.push(spaces, '[');
+        obj.forEach(function(obj) {
+            buf.push('\n', stringify(obj, indent + 2));
+        })
+        buf.push('\n', spaces, ']');
+    } else {
+        buf.push(spaces, '{');
+        for(var k in obj) {
+            if(!obj.hasOwnProperty(k)) continue;
+            buf.push('\n', spaces, k, '\n');
+            buf.push(stringify(obj[k], indent + 2));
+        }
+        buf.push('\n', spaces, '}');
+    }
+    return buf.join('');
+}
+
 function mystringify(obj, indent) {
     indent = indent || 2;
     var buf = [],
@@ -82,7 +106,8 @@ for (var i = 0; i < NOF_INPUTS; i++) {
 
 var suite = new Benchmark.Suite;
 suite
-    .add('test: flat array of int', function () { mystringify(fakeInput); })
+    .add('Base: flat array of int', function () { stringify(fakeInput); })
+    .add('Test: flat array of int', function () { mystringify(fakeInput); })
     .add('JSON: flat array of int', function () { JSON.stringify(fakeInput); })
     .on('cycle', function (event) { out(String(event.target)); });
-suite.run();
+suite.run({ 'async': true });
