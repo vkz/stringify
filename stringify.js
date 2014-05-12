@@ -13,7 +13,7 @@ function mystringify(obj, indent) {
         buf.push(spaces, String(obj));
     } else if(Array.isArray(obj)) {
         buf.push(spaces, '[');
-        obj.forEach(function(obj) {
+        obj.forEach(function strArrayElement(obj) {
             buf.push('\n', mystringify(obj, indent + 2));
         })
         buf.push('\n', spaces, ']');
@@ -27,6 +27,16 @@ function mystringify(obj, indent) {
         buf.push('\n', spaces, '}');
     }
     return buf.join('');
+}
+
+// ******************* playground ***************************** //
+
+// printer
+var out;
+if (typeof console !== 'undefined') {
+    out = console.log;
+} else if (typeof print !== 'undefined') {
+    out = print;
 }
 
 // Returns a random integer between min and max
@@ -67,10 +77,4 @@ var end = Date.now();
 var timeSpent = end - start;
 var totalNumbers = total_fakeNumbers * NOF_RUNS;
 var result = [timeSpent + ' ms', Math.floor(totalNumbers/timeSpent) + ' numbers/ms'];
-
-if (typeof console !== 'undefined' && typeof document !== 'undefined') {
-    console.log(result[0], ', ', result[1]);
-    document.writeln(result[0], ', ', result[1]);
-} else if (typeof console !== 'undefined' ) {
-    console.log(result[0], ', ', result[1]);
-}
+out(result[0], ', ', result[1]);
