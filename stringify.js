@@ -5,6 +5,7 @@
  * @returns {String}
  */
 
+// Base
 function stringify(obj, indent) {
     indent = indent || 2;
     var buf = [],
@@ -29,28 +30,30 @@ function stringify(obj, indent) {
     return buf.join('');
 }
 
+// Test
 function mystringify(obj, indent) {
-    indent = indent || 2;
-    var buf = [],
-        spaces = Array(indent + 1).join(' ');
+    indent = indent || '  ';
+    var i,
+        buf = [],
+        spaces = indent; // avoid indent string computation - speedup over 10x
     if(typeof obj === 'string' || typeof obj === 'number' || typeof obj === 'boolean') {
-        buf.push(spaces, String(obj));
+        return spaces + String(obj);
     } else if(Array.isArray(obj)) {
-        buf.push(spaces, '[');
-        obj.forEach(function strArrayElement(obj) {
-            buf.push('\n', mystringify(obj, indent + 2));
-        })
-        buf.push('\n', spaces, ']');
+        // ditch forEach and loop over array - medium speedup
+        // don't see why forEach would be slower though
+        for (i = 0; i < obj.length; i++) {
+            buf[i] = mystringify(obj[i], indent + '  ');
+        }
+        return spaces + '[\n' + buf.join('\n') + '\n' + spaces + ']';
     } else {
         buf.push(spaces, '{');
         for(var k in obj) {
             if(!obj.hasOwnProperty(k)) continue;
             buf.push('\n', spaces, k, '\n');
-            buf.push(mystringify(obj[k], indent + 2));
+            buf.push(mystringify(obj[k], indent + '  '));
         }
         buf.push('\n', spaces, '}');
     }
-    return buf.join('');
 }
 
 // ******************* utils ***************************** //
