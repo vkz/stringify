@@ -39,6 +39,15 @@ if (typeof console !== 'undefined') {
     out = print;
 }
 
+// dependencies
+if (typeof load !== 'undefined') {
+    load("node_modules/lodash/lodash.js");
+    load("node_modules/benchmark/benchmark.js");
+} else if (typeof require !== 'undefined') {
+    var __ = require("lodash");
+    var Benchmark = require("benchmark");
+}
+
 // Returns a random integer between min and max
 function randomBetween(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
