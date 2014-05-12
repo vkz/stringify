@@ -29,7 +29,7 @@ function mystringify(obj, indent) {
     return buf.join('');
 }
 
-// ******************* playground ***************************** //
+// ******************* utils ***************************** //
 
 // printer
 var out;
@@ -53,12 +53,16 @@ function randomBetween(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+// ******************* tests ***************************** //
+
+// **Test**
+// big flat arrays of int
+
 var MIN_ARRAY_LENGTH = 100,
     MAX_ARRAY_LENGTH = 1000,
     NOF_INPUTS        = 100,
     NOF_RUNS          = 10;
 
-// [1, 2, 3, ..] int array, but .forEach() maybe too general
 function makeFakeArray() {
     var a = [];
     var l = randomBetween(MIN_ARRAY_LENGTH, MAX_ARRAY_LENGTH);
@@ -77,13 +81,8 @@ for (var i = 0; i < NOF_INPUTS; i++) {
     total_fakeNumbers += (fakeInput[i]).length;
 }
 
-var start = Date.now();
-for (var j = 0; j < NOF_RUNS; j++) {
-    mystringify(fakeInput);
-}
-var end = Date.now();
-
-var timeSpent = end - start;
-var totalNumbers = total_fakeNumbers * NOF_RUNS;
-var result = [timeSpent + ' ms', Math.floor(totalNumbers/timeSpent) + ' numbers/ms'];
-out(result[0], ', ', result[1]);
+var suite = new Benchmark.Suite;
+suite
+    .add('flat array of int', function () { mystringify(fakeInput); })
+    .on('cycle', function (event) { out(event.target); });
+suite.run();
