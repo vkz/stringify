@@ -60,8 +60,7 @@ function randomBetween(min, max) {
 
 var MIN_ARRAY_LENGTH = 100,
     MAX_ARRAY_LENGTH = 1000,
-    NOF_INPUTS        = 100,
-    NOF_RUNS          = 10;
+    NOF_INPUTS        = 100;
 
 function makeFakeArray() {
     var a = [];
@@ -83,6 +82,7 @@ for (var i = 0; i < NOF_INPUTS; i++) {
 
 var suite = new Benchmark.Suite;
 suite
-    .add('flat array of int', function () { mystringify(fakeInput); })
-    .on('cycle', function (event) { out(event.target); });
+    .add('test: flat array of int', function () { mystringify(fakeInput); })
+    .add('JSON: flat array of int', function () { JSON.stringify(fakeInput); })
+    .on('cycle', function (event) { out(String(event.target)); });
 suite.run();
