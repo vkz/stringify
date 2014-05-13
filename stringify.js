@@ -41,24 +41,26 @@ function mystringify(obj, indent) {
     if(typeof obj === 'string' || typeof obj === 'number' || typeof obj === 'boolean') {
         return spaces + String(obj);
     } else if(Array.isArray(obj)) {
-        // Replacing loop with foldl gives a substatial speedup in nested arrays
-        // even though V8 runs it unoptimized due too many deoptimizations.
-        // This must not be the answer then. Native Array.prototype.reduce is
-        // somewhat slower but not crucially and suffers from the same JIT bailouts.
-        acc = _.foldl(obj,
-                      function folder(acc, o) {
-                          return acc + mystringify(o, indent + '  ') + '\n';
-                      },
-                      spaces + '[\n');
-        return acc + spaces + ']';
-    } else {
-        buf.push(spaces, '{');
-        for(var k in obj) {
-            if(!obj.hasOwnProperty(k)) continue;
-            buf.push('\n', spaces, k, '\n');
-            buf.push(mystringify(obj[k], indent + '  '));
+        // Back to iteration. Turns out accumulating result in an array was too slow.
+        // Ditch buf-array and concatenate strings - massive speedup. JIT is happy.
+        for (i = 0; i < obj.length; i++) {
+            acc += mystringify(obj[i], indent + '  ') + '\n';
         }
-        buf.push('\n', spaces, '}');
+        return spaces + '[\n' + acc +  spaces + ']';
+    } else {
+
+        // for-in is not a fast-case for V8, so it deoptimizes entire function
+        // this branch isn't important while testing arrays anyway
+        return String(obj);
+
+        // buf.push(spaces, '{');
+        // for(var k in obj) {
+        //     if(!obj.hasOwnProperty(k)) continue;
+        //     buf.push('\n', spaces, k, '\n');
+        //     buf.push(mystringify(obj[k], indent + '  '));
+        // }
+        // buf.push('\n', spaces, '}');
+
     }
 }
 
