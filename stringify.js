@@ -82,14 +82,19 @@ function randomBetween(min, max) {
 
 // ******************* tests ***************************** //
 
+var suite,
+    suites = [],
+    MIN_ARRAY_LENGTH = 100,
+    MAX_ARRAY_LENGTH = 1000,
+    MIN_DEPTH = 20,
+    MAX_DEPTH = 50,
+    NOF_INPUTS = 100,
+    fakeInput;
+
 // **Test**
 // big flat arrays of int
 
-var MIN_ARRAY_LENGTH = 100,
-    MAX_ARRAY_LENGTH = 1000,
-    NOF_INPUTS        = 100;
-
-function makeFakeArray() {
+function makeFakeFlatArray() {
     var a = [];
     var l = randomBetween(MIN_ARRAY_LENGTH, MAX_ARRAY_LENGTH);
     var start = randomBetween(MIN_ARRAY_LENGTH, MAX_ARRAY_LENGTH);
@@ -100,17 +105,18 @@ function makeFakeArray() {
     return a;
 }
 
-var fakeInput = [];
-var total_fakeNumbers = 0;
-for (var i = 0; i < NOF_INPUTS; i++) {
-    fakeInput.push(makeFakeArray());
-    total_fakeNumbers += (fakeInput[i]).length;
+for (var i = 0, fakeInput = []; i < NOF_INPUTS; i++) {
+    fakeInput.push(makeFakeFlatArray());
 }
 
-var suite = new Benchmark.Suite;
+suite = new Benchmark.Suite('Flat array of int');
 suite
-    .add('Base: flat array of int', function () { stringify(fakeInput); })
-    .add('Test: flat array of int', function () { mystringify(fakeInput); })
-    .add('JSON: flat array of int', function () { JSON.stringify(fakeInput); })
-    .on('cycle', function (event) { out(String(event.target)); });
-suite.run({ 'async': true });
+    .add('Base', function () { stringify(fakeInput); })
+    .add('Test', function () { mystringify(fakeInput); })
+    .add('JSON', function () { JSON.stringify(fakeInput); })
+    .on('cycle', function (event) { out('-> ' + String(event.target)); })
+    .on('start', function(event) { out(String(event.currentTarget.name));});
+suites.push(suite);
+
+// **Run each suite**
+suites.forEach(function (suite) { suite.run({ 'async': true }); });
