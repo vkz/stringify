@@ -34,33 +34,27 @@ function stringify(obj, indent) {
 function mystringify(obj, indent) {
     indent = indent || '  ';
     var i,
-        buf = [],
+        k,
+        key,
+        keys = [],
         spaces = indent,
         acc = '';
 
     if(typeof obj === 'string' || typeof obj === 'number' || typeof obj === 'boolean') {
         return spaces + String(obj);
     } else if(Array.isArray(obj)) {
-        // Back to iteration. Turns out accumulating result in an array was too slow.
-        // Ditch buf-array and concatenate strings - massive speedup. JIT is happy.
         for (i = 0; i < obj.length; i++) {
             acc += mystringify(obj[i], indent + '  ') + '\n';
         }
         return spaces + '[\n' + acc +  spaces + ']';
     } else {
-
-        // for-in is not a fast-case for V8, so it deoptimizes entire function
-        // this branch isn't important while testing arrays anyway
-        return String(obj);
-
-        // buf.push(spaces, '{');
-        // for(var k in obj) {
-        //     if(!obj.hasOwnProperty(k)) continue;
-        //     buf.push('\n', spaces, k, '\n');
-        //     buf.push(mystringify(obj[k], indent + '  '));
-        // }
-        // buf.push('\n', spaces, '}');
-
+        // ditch for-in loop, which isn't fast case for V8 and can't be optimized
+        keys = Object.keys(obj);
+        for (k = 0; k < keys.length; k++) {
+            key = keys[k];
+            acc += spaces + key + '\n' + mystringify (obj[key], indent + '  ') + '\n';
+        }
+        return spaces + '{\n' + acc +  spaces + '}';
     }
 }
 
@@ -176,6 +170,23 @@ function makeFakeNestedArray() {
 
 suites.push(makeSuite('Nested array of int', generateArrayInput(makeFakeNestedArray)));
 
+// ** Suite **
+// big flat objects
+
+function makeFakeFlatObject() {
+    var a = {};
+    var l = randomBetween(MIN_ARRAY_LENGTH, MAX_ARRAY_LENGTH);
+    var start = randomBetween(MIN_ARRAY_LENGTH, MAX_ARRAY_LENGTH);
+
+    for (var i = 0, key = ''; i < l; i++) {
+        key = (i).toString();
+        a[key] = start + i;
+    }
+    return a;
+}
+
+suites.push(makeSuite('Flat objects', generateArrayInput(makeFakeFlatObject)));
+
 // ** Run suites **
 
-runTests('','');
+runTests('object','test');
