@@ -58,6 +58,13 @@ function mystringify(obj, indent) {
 
 // ******************* utils ***************************** //
 
+var suites = [],
+    MIN_ARRAY_LENGTH = 100,
+    MAX_ARRAY_LENGTH = 1000,
+    MIN_DEPTH = 20,
+    MAX_DEPTH = 50,
+    NOF_INPUTS = 100;
+
 // printer
 var out;
 if (typeof console !== 'undefined') {
@@ -75,23 +82,36 @@ if (typeof load !== 'undefined') {
     var Benchmark = require("benchmark");
 }
 
-// Returns a random integer between min and max
+// random integer between min and max
 function randomBetween(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+function makeSuite(name, fakeInput) {
+    var suite = new Benchmark.Suite(name);
+    suite
+        .add('Base', function () { stringify(fakeInput); })
+        .add('Test', function () { mystringify(fakeInput); })
+        .add('JSON', function () { JSON.stringify(fakeInput); })
+        .on('cycle', function (event) { out('-> ' + String(event.target)); })
+        .on('start', function(event) { out(String(event.currentTarget.name));});
+    return suite;
+}
+
+// Given generator-thunk that returns an array
+// produce an array of generated arrays for suite consumption
+function generateArrayInput(generator) {
+    var i, fakeInput;
+    for (i = 0, fakeInput = []; i < NOF_INPUTS; i++) {
+        fakeInput.push(generator());
+    }
+    return fakeInput;
+}
+
+
 // ******************* tests ***************************** //
 
-var suite,
-    suites = [],
-    MIN_ARRAY_LENGTH = 100,
-    MAX_ARRAY_LENGTH = 1000,
-    MIN_DEPTH = 20,
-    MAX_DEPTH = 50,
-    NOF_INPUTS = 100,
-    fakeInput;
-
-// **Test**
+// ** Suite **
 // big flat arrays of int
 
 function makeFakeFlatArray() {
@@ -105,18 +125,25 @@ function makeFakeFlatArray() {
     return a;
 }
 
-for (var i = 0, fakeInput = []; i < NOF_INPUTS; i++) {
-    fakeInput.push(makeFakeFlatArray());
+suites.push(makeSuite('Flat array of int', generateArrayInput(makeFakeFlatArray)));
+
+// ** Suite **
+// deeply nested array of int
+
+function nestArray(depth) {
+    var length = randomBetween(1, 5),
+        spot = randomBetween(0, length - 1),
+        a = [];
+    for (var i = 0; i < length; i++) { a[i] = spot + i; }
+    return depth === 0 ? a : a[spot] = nestArray(depth - 1), a;
 }
 
-suite = new Benchmark.Suite('Flat array of int');
-suite
-    .add('Base', function () { stringify(fakeInput); })
-    .add('Test', function () { mystringify(fakeInput); })
-    .add('JSON', function () { JSON.stringify(fakeInput); })
-    .on('cycle', function (event) { out('-> ' + String(event.target)); })
-    .on('start', function(event) { out(String(event.currentTarget.name));});
-suites.push(suite);
+function makeFakeNestedArray() {
+    var depth = randomBetween(MIN_DEPTH, MAX_DEPTH);
+    return nestArray(depth);
+}
 
-// **Run each suite**
+suites.push(makeSuite('Nested array of int', generateArrayInput(makeFakeNestedArray)));
+
+// ** Run suites **
 suites.forEach(function (suite) { suite.run({ 'async': true }); });
