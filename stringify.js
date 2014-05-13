@@ -35,12 +35,10 @@ function mystringify(obj, indent) {
     indent = indent || '  ';
     var i,
         buf = [],
-        spaces = indent; // avoid indent string computation - speedup over 10x
+        spaces = indent;
     if(typeof obj === 'string' || typeof obj === 'number' || typeof obj === 'boolean') {
         return spaces + String(obj);
     } else if(Array.isArray(obj)) {
-        // ditch forEach and loop over array - medium speedup
-        // don't see why forEach would be slower though
         for (i = 0; i < obj.length; i++) {
             buf[i] = mystringify(obj[i], indent + '  ');
         }
@@ -67,8 +65,9 @@ var suites = [],
 
 // printer
 var out;
+
 if (typeof console !== 'undefined') {
-    out = console.log;
+    out = function() { console.log.apply(console, arguments);};
 } else if (typeof print !== 'undefined') {
     out = print;
 }
@@ -108,7 +107,6 @@ function generateArrayInput(generator) {
     return fakeInput;
 }
 
-
 // ******************* tests ***************************** //
 
 // ** Suite **
@@ -146,4 +144,4 @@ function makeFakeNestedArray() {
 suites.push(makeSuite('Nested array of int', generateArrayInput(makeFakeNestedArray)));
 
 // ** Run suites **
-suites.forEach(function (suite) { suite.run({ 'async': true }); });
+suites.forEach(function (suite) { suite.run({ 'async': false }); });
