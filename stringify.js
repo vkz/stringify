@@ -35,14 +35,22 @@ function mystringify(obj, indent) {
     indent = indent || '  ';
     var i,
         buf = [],
-        spaces = indent;
+        spaces = indent,
+        acc = '';
+
     if(typeof obj === 'string' || typeof obj === 'number' || typeof obj === 'boolean') {
         return spaces + String(obj);
     } else if(Array.isArray(obj)) {
-        for (i = 0; i < obj.length; i++) {
-            buf[i] = mystringify(obj[i], indent + '  ');
-        }
-        return spaces + '[\n' + buf.join('\n') + '\n' + spaces + ']';
+        // Replacing loop with foldl gives a substatial speedup in nested arrays
+        // even though V8 runs it unoptimized due too many deoptimizations.
+        // This must not be the answer then. Native Array.prototype.reduce is
+        // somewhat slower but not crucially and suffers from the same JIT bailouts.
+        acc = _.foldl(obj,
+                      function folder(acc, o) {
+                          return acc + mystringify(o, indent + '  ') + '\n';
+                      },
+                      spaces + '[\n');
+        return acc + spaces + ']';
     } else {
         buf.push(spaces, '{');
         for(var k in obj) {
@@ -77,7 +85,7 @@ if (typeof load !== 'undefined') {
     load("node_modules/lodash/lodash.js");
     load("node_modules/benchmark/benchmark.js");
 } else if (typeof require !== 'undefined') {
-    var __ = require("lodash");
+    var _ = require("lodash");
     var Benchmark = require("benchmark");
 }
 
