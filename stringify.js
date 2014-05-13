@@ -107,6 +107,29 @@ function generateArrayInput(generator) {
     return fakeInput;
 }
 
+// Filter suits and benchmarks by name and run only those
+// case insensitive, partial matches work
+// passing empty strings will match and run all tests
+function runTests(suiteName, benchmarkName) {
+    var filteredSuites = [],
+        filteredBenchmarks = [],
+        reSuite = new RegExp (suiteName, 'i'),
+        reBenchmark = new RegExp (benchmarkName, 'i');
+
+    filteredSuites = suites.filter(function (suite) {
+        return reSuite.test(suite.name);
+    });
+
+    filteredSuites = filteredSuites.map(function (suite) {
+        var suiteName = suite.name;
+        suite = suite.filter(function (b) {return reBenchmark.test(b.name);})
+            .on('cycle', function (event) { out('-> ' + String(event.target)); })
+            .on('start', function(event) { out('\n' + suiteName); });
+        return suite;
+    });
+    filteredSuites.forEach(function (suite) { suite.run({ 'async': false }); });
+}
+
 // ******************* tests ***************************** //
 
 // ** Suite **
@@ -144,4 +167,5 @@ function makeFakeNestedArray() {
 suites.push(makeSuite('Nested array of int', generateArrayInput(makeFakeNestedArray)));
 
 // ** Run suites **
-suites.forEach(function (suite) { suite.run({ 'async': false }); });
+
+runTests('','');
