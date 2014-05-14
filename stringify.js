@@ -187,6 +187,26 @@ function makeFakeFlatObject() {
 
 suites.push(makeSuite('Flat objects', generateArrayInput(makeFakeFlatObject)));
 
+// ** Suite **
+// nested objects
+
+function nestObject(depth) {
+    var length = randomBetween(1, 5),
+        spot = randomBetween(0, length - 1),
+        a = {};
+    for (var i = 0; i < length; i++) { a[(i).toString()] = spot + i; }
+    return depth === 0 ? a : a[spot.toString()] = nestObject(depth - 1), a;
+}
+
+function makeFakeNestedObject() {
+    var depth = randomBetween(MIN_DEPTH, MAX_DEPTH);
+    return nestObject(depth);
+}
+
+suites.push(makeSuite('Nested objects', generateArrayInput(makeFakeNestedObject)));
+
+
+
 // ** Run suites **
 
-runTests('object','test');
+runTests('','');
